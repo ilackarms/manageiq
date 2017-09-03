@@ -24,7 +24,7 @@ def ilackarms_plugin(plugin_name)
 end
 
 manageiq_plugin "manageiq-providers-ansible_tower" # can't move this down yet, because we can't autoload ManageIQ::Providers::AnsibleTower::Shared
-ilackarms_plugin "manageiq-schema"
+manageiq_plugin "manageiq-schema"
 
 # Unmodified gems
 gem "activerecord-id_regions",        "~>0.2.0"
