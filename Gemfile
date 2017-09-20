@@ -1,3 +1,5 @@
+require 'json'
+
 raise "Ruby versions less than 2.2.2 are unsupported!" if RUBY_VERSION < "2.2.2"
 
 source 'https://rubygems.org'
@@ -10,10 +12,22 @@ gem "manageiq-gems-pending", ">0", :require => 'manageiq-gems-pending', :git => 
 # Modified gems for gems-pending.  Setting sources here since they are git references
 gem "handsoap", "~>0.2.5", :require => false, :git => "https://github.com/ManageIQ/handsoap.git", :tag => "v0.2.5-5"
 
+def ref(plugin_name)
+  @plugin_refs ||= JSON.parse(IO.read('plugin-refs.json', :encoding => 'utf-8'))
+  raise "ref for #{plugin_name} not found" unless @plugin_refs[plugin_name]
+  @plugin_refs[plugin_name]
+end
+
 # when using this Gemfile inside a providers Gemfile, the dependency for the provider is already declared
 def manageiq_plugin(plugin_name)
   unless dependencies.detect { |d| d.name == plugin_name }
-    gem plugin_name, :git => "https://github.com/ManageIQ/#{plugin_name}", :branch => "master"
+    gem plugin_name, :git => "https://github.com/ManageIQ/#{plugin_name}", :ref => ref(plugin_name)
+  end
+end
+
+def ilackarms_plugin(plugin_name)
+  unless dependencies.detect { |d| d.name == plugin_name }
+    gem plugin_name, :git => "https://github.com/ilackarms/#{plugin_name}", :branch => "image-stable"
   end
 end
 
@@ -98,7 +112,7 @@ group :hawkular, :manageiq_default do
 end
 
 group :kubernetes, :openshift, :manageiq_default do
-  manageiq_plugin "manageiq-providers-kubernetes"
+  ilackarms_plugin "manageiq-providers-kubernetes"
 end
 
 group :lenovo, :manageiq_default do
@@ -110,7 +124,7 @@ group :nuage, :manageiq_default do
 end
 
 group :openshift, :manageiq_default do
-  manageiq_plugin "manageiq-providers-openshift"
+  ilackarms_plugin "manageiq-providers-openshift"
   gem "htauth",                         "2.0.0",         :require => false # used by container deployment
 end
 
@@ -169,7 +183,7 @@ group :smartstate, :manageiq_default do
 end
 
 group :ui_dependencies do # Added to Bundler.require in config/application.rb
-  manageiq_plugin "manageiq-ui-classic"
+  ilackarms_plugin "manageiq-ui-classic"
   # Modified gems (forked on Github)
   gem "jquery-rjs",                   "=0.1.1",                       :git => "https://github.com/ManageIQ/jquery-rjs.git", :tag => "v0.1.1-1"
 end
